@@ -1,6 +1,7 @@
 PImage block1;
 PImage block2;
-PImage mario;
+PImage leftmario;
+PImage rightmario;
 int worldX = 0;
 int worldY = 0;
 int blockSizeX = 32;
@@ -16,11 +17,14 @@ int marioGravitySpeed = 0;
 boolean isLeft, isRight, isUp, isDown;
 boolean jumping = true;
 int mario_XSpeed = 4;
+String marioFacing = "right"; // where mario is looking, left or right
 void setup() {
-  size(1024,512); //16 kuber = linje genom skärmnen( 16 * 32 = 512)
+  size(1350,700); //16 kuber = linje genom skärmnen( 16 * 32 = 512)
   block1 = loadImage("block1.png");
   block2 = loadImage("block2.png");
-  mario = loadImage("mario.png");
+  leftmario = loadImage("leftmario.png");
+  rightmario = loadImage("rightmario.png");
+  
 }
 void draw() {
   background(255);
@@ -28,14 +32,15 @@ void draw() {
   YposList = new int[0];
   if (isLeft) {
     marioX+=mario_XSpeed * -1; 
-    
+    marioFacing = "left";
   }
   if (isRight) {
     marioX+=mario_XSpeed; 
+    marioFacing = "right";
     
   }
   if (isDown)marioY+=2;
-  if (isUp)if(!jumping)marioY+=-400;
+  if (isUp)if(!jumping)marioGravitySpeed = -24;
   
   
   translate(marioX * -1 + width/2,(marioY * -1) + height/2);
@@ -51,7 +56,8 @@ void draw() {
   touchingDownBlocks();
   touchingLeftBlocks();
   touchingRightBlocks();
-  image(mario,marioX,marioY,marioSizeX,marioSizeY);
+  if (marioFacing == "left")image(leftmario,marioX,marioY,marioSizeX,marioSizeY);
+  else image(rightmario,marioX,marioY,marioSizeX,marioSizeY);
   
 }
 
