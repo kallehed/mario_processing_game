@@ -2,6 +2,8 @@ PImage block1;
 PImage block2;
 PImage leftmario;
 PImage rightmario;
+PImage downrightmario;
+PImage downleftmario;
 int worldX = 0;
 int worldY = 0;
 int blockSizeX = 32;
@@ -24,30 +26,48 @@ void setup() {
   block2 = loadImage("block2.png");
   leftmario = loadImage("leftmario.png");
   rightmario = loadImage("rightmario.png");
+  downrightmario = loadImage("downrightmario.png");
+  downleftmario = loadImage("downleftmario.png");
   
 }
 void draw() {
+  pushMatrix();
   background(255);
   XposList = new int[0];
   YposList = new int[0];
   if (isLeft) {
-    marioX+=mario_XSpeed * -1; 
-    marioFacing = "left";
+    if (marioFacing != "downleft" && marioFacing != "downright") {
+      marioX+=mario_XSpeed * -1; 
+      marioFacing = "left";
+    } else { 
+        marioFacing = "downleft";
+        if (jumping)marioX+=mario_XSpeed * -1;
+    }
   }
   if (isRight) {
-    marioX+=mario_XSpeed; 
-    marioFacing = "right";
+    if (marioFacing != "downleft" && marioFacing != "downright") {
+      marioX+=mario_XSpeed;
+      marioFacing = "right";
+    } else { 
+        marioFacing = "downright";
+        if (jumping)marioX+=mario_XSpeed;
+    }
+  }
+  if (isDown) { 
+    if (marioFacing == "right" || marioFacing == "downright") {
+      marioFacing = "downright";
+    } else marioFacing = "downleft";
     
   }
-  if (isDown)marioY+=2;
   if (isUp)if(!jumping)marioGravitySpeed = -24;
   
   
-  translate(marioX * -1 + width/2,(marioY * -1) + height/2);
+  translate(marioX * -1 + width/2,marioY * -1 + height/2);
   //image(block1,0,0,blockSizeX,blockSizeY);
   blocklineX(block1, 15, -16, 16);
   blocklineX(block2, 14, 4, 6);
   blocklineY(block2, 4, 8, 108);
+  blocklineY(block2, 0, 10,20);
   marioGravitySpeed += 1;
   if (marioGravitySpeed > 16) {
     marioGravitySpeed = 16;
@@ -57,14 +77,23 @@ void draw() {
   touchingLeftBlocks();
   touchingRightBlocks();
   if (marioFacing == "left")image(leftmario,marioX,marioY,marioSizeX,marioSizeY);
-  else image(rightmario,marioX,marioY,marioSizeX,marioSizeY);
-  
+  else if(marioFacing == "right")image(rightmario,marioX,marioY,marioSizeX,marioSizeY);
+  else if (marioFacing == "downright")image(downrightmario,marioX,marioY +10,marioSizeX,marioSizeY -10);
+  else image(downleftmario,marioX,marioY +10,marioSizeX,marioSizeY -10);
+  popMatrix();
+  //text(marioFacing, 100,100); //draws what way you're looking
+  fill(0);
 }
 
 void keyPressed() {
   setMove(keyCode, true);
 }
 void keyReleased() {
+  if (marioGravitySpeed < -12)marioGravitySpeed=-12;
+  if (marioFacing == "downright" || marioFacing == "downleft") {
+    if (marioFacing == "downright")marioFacing = "right";
+    else marioFacing = "left";
+  }
   setMove(keyCode, false);
 }
 boolean setMove(int k, boolean b) {
