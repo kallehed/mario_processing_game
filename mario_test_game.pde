@@ -9,6 +9,8 @@ PImage rightmario;
 PImage downrightmario;
 PImage downleftmario;
 PImage forest_back;
+PImage marioleftwalk;
+PImage mariorightwalk;
 
 int blockSizeX = 32;
 int blockSizeY = 32;
@@ -24,6 +26,7 @@ String[] en_List = {};
 int en_speed = 1;
 
 int blockNum = 0;
+int marioWalkSprite = 0;
 int marioX = 0;
 int marioY = 0;
 int marioSizeX = 32;
@@ -31,9 +34,11 @@ int marioSizeY = 40;
 float marioGravitySpeed = 0;
 boolean isLeft, isRight, isUp, isDown;
 boolean jumping = true;
-int mario_XSpeed = 4;
+float mario_XSpeed = 0;
+float mario_XAcceleration = 4;
 String marioFacing = "right"; // where mario is looking, left or right
 float GravityAcceleration = 1;
+
 float JumpSpeed = -18;
 boolean walkedleft = false;
 boolean walkedright = true;
@@ -52,6 +57,8 @@ void setup() {
   koopaleftwalk = loadImage("koopaleftwalk.png");
   kooparight = loadImage("kooparight.png");
   kooparightwalk = loadImage("kooparightwalk.png");
+  marioleftwalk = loadImage("marioleftwalk.png");
+  mariorightwalk = loadImage("mariorightwalk.png");
   
   forest_back = loadImage("forest_back.png");
   
@@ -71,7 +78,7 @@ void draw() {
   if (isLeft) {
     walkedleft = true;
     if (marioFacing != "downleft" && marioFacing != "downright") {
-      marioX+=mario_XSpeed * -1; 
+      mario_XSpeed=mario_XAcceleration * -1; 
       marioFacing = "left";
     } else { 
       marioFacing = "downleft";
@@ -81,7 +88,7 @@ void draw() {
   if (isRight) {
     walkedright = true;
     if (marioFacing != "downleft" && marioFacing != "downright") {
-      marioX+=mario_XSpeed;
+      mario_XSpeed=mario_XAcceleration;
       marioFacing = "right";
     } else { 
       marioFacing = "downright";
@@ -97,7 +104,11 @@ void draw() {
     marioGravitySpeed = JumpSpeed;
     jumpsound.play(0.5);
   }
-
+  if (!walkedleft && !walkedright)mario_XSpeed = 0;
+  //if (mario_XSpeed > mario_XAcceleration*4)mario_XSpeed = mario_XAcceleration*4;
+  //if (mario_XSpeed < mario_XAcceleration*-4)mario_XSpeed = mario_XAcceleration*-4;
+  marioX += mario_XSpeed;
+  
   translate(marioX * -1 + width/2, marioY * -1 + height/2);
   draw_background("forest");
   
@@ -107,30 +118,60 @@ void draw() {
   blocklineY(block2, 4, 18, 108);
   blocklineY(block2, 0, 16, 20);
   draw_enemy();
-
+  //////////////////////////// does all the gravity jump stuff
   marioGravitySpeed += GravityAcceleration;
   if (marioGravitySpeed > GravityAcceleration*16) {
     marioGravitySpeed = GravityAcceleration*16;
   }
-  marioY += marioGravitySpeed;
-  //touchingUpBlocks();
+  marioY += marioGravitySpeed; // moves mario up or down
+  //////////////////////////////
   touchingDownBlocks();
 
   if (walkedleft)touchingLeftBlocks();
   if (walkedright)touchingRightBlocks();
   
+  drawMario();
   
-  if (marioFacing == "left")image(leftmario, marioX, marioY + -8, marioSizeX, marioSizeY);
-  else if (marioFacing == "right")image(rightmario, marioX, marioY -8, marioSizeX, marioSizeY);
-  else if (marioFacing == "downright")image(downrightmario, marioX, marioY +10 -8, marioSizeX, marioSizeY -10);
-  else image(downleftmario, marioX, marioY +10 -8, marioSizeX, marioSizeY -10);
   popMatrix();
   move_en();
   //text(marioFacing, 100,100); //draws what way you're looking
   //String str = String.valueOf(jumping);
   //text(str, 100, 100);
-  text(marioGravitySpeed, 100, 100);
+  text(mario_XSpeed, 100, 100);
   //fill(0);
+  //if (mario_XSpeed > 0)mario_XSpeed -=mario_XAcceleration/2;
+  //if (mario_XSpeed < 0)mario_XSpeed +=mario_XAcceleration/2;
+}
+void drawMario() {
+  if (marioFacing == "left") {
+    if (walkedleft) {
+      if (marioWalkSprite < 5) {
+        image(leftmario, marioX, marioY + -8, marioSizeX, marioSizeY);
+        marioWalkSprite += 1;
+      } else {
+        image(marioleftwalk, marioX, marioY + -10, marioSizeX, marioSizeY);
+        marioWalkSprite += 1;
+      }
+    } else {
+      image(leftmario, marioX, marioY + -8, marioSizeX, marioSizeY);
+    }
+  }
+  if (marioFacing == "right") {
+    if (walkedright) {
+      if (marioWalkSprite < 5) {
+        image(rightmario, marioX, marioY + -8, marioSizeX, marioSizeY);
+        marioWalkSprite += 1;
+      } else {
+        image(mariorightwalk, marioX, marioY + -10, marioSizeX, marioSizeY);
+        marioWalkSprite += 1;
+      }
+    } else {
+      image(rightmario, marioX, marioY + -8, marioSizeX, marioSizeY);
+    }
+  }
+  if (marioFacing == "downright")image(downrightmario, marioX, marioY +10 -8, marioSizeX, marioSizeY -10);
+  if (marioFacing == "downleft")image(downleftmario, marioX, marioY +10 -8, marioSizeX, marioSizeY -10);
+  if (marioWalkSprite > 9)marioWalkSprite = 0;
 }
 void draw_background(String back) {
   if (back == "forest") {
@@ -219,28 +260,8 @@ void create_enemy(String enemy, int y, int x, int x2) {
   if (x2 > x)en_facingList = append(en_facingList, "left");
   else en_facingList = append(en_facingList, "right");
 
-  //en_facingList = append(en_facingList, facing);
+  
 }
-void touchingUpBlocks() {
-
-  int index = 0;
-  for (int i : XposList) {
-    if (1 != 2) {
-      index += 1;
-      if (marioX + blockSizeX>= i && i + blockSizeX >= marioX + blockSizeX) { //
-
-        if (marioY < YposList[index-1] + blockSizeY) { //Mtop over Bbottom
-          if (marioY > YposList[index-1] * 0.5) { // Mtop under Btop
-            marioY += marioGravitySpeed * -1;
-            marioGravitySpeed = 0;
-            //println("tes");
-          }
-        }
-      }
-    }
-  }
-}
-
 void touchingRightBlocks() {
 
   int index = 0;
@@ -251,7 +272,7 @@ void touchingRightBlocks() {
 
       if (YposList[index-1] <= marioY + blockSizeY - 1 && YposList[index-1] + blockSizeY >= marioY) {
         marioX += mario_XSpeed * -1;
-        //println("los");
+        println("los");
       }
     }
   }
@@ -266,8 +287,8 @@ void touchingLeftBlocks() {
        //( marios bottom is UNDER the blocks top)  (Marios top is ABOVE the blocks bottom)
       if (YposList[index-1] < marioY + blockSizeY && YposList[index-1] + blockSizeY > marioY) {
         //if () {
-        marioX += mario_XSpeed;
-        //println("das");
+        marioX += mario_XSpeed * -1;
+        println("das");
       }
     }
   }
@@ -288,7 +309,7 @@ void touchingDownBlocks() { //Detects gravity, if touch block, go up
           marioGravitySpeed = 0;
         
           jumping = false;
-          println("jum");
+          //println("jum");
           break;
         }
       } else jumping = true;
