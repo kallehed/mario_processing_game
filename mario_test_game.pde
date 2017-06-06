@@ -11,6 +11,10 @@ PImage downleftmario;
 PImage forest_back;
 PImage marioleftwalk;
 PImage mariorightwalk;
+PImage mariojumpleft;
+PImage mariojumpright;
+PImage mariofallleft;
+PImage mariofallright;
 
 int blockSizeX = 32;
 int blockSizeY = 32;
@@ -59,6 +63,10 @@ void setup() {
   kooparightwalk = loadImage("kooparightwalk.png");
   marioleftwalk = loadImage("marioleftwalk.png");
   mariorightwalk = loadImage("mariorightwalk.png");
+  mariojumpright = loadImage("mariojumpright.png");
+  mariojumpleft = loadImage("mariojumpleft.png");
+  mariofallleft = loadImage("mariofallleft.png");
+  mariofallright = loadImage("mariofallright.png");
   
   forest_back = loadImage("forest_back.png");
   
@@ -73,26 +81,43 @@ void draw() {
   
   XposList = new int[0];
   YposList = new int[0];
-  //en_XposList = new int[0];
-  //en_YposList = new int[0];
+
   if (isLeft) {
     walkedleft = true;
-    if (marioFacing != "downleft" && marioFacing != "downright") {
+    if (marioFacing == "fallingleft" || marioFacing == "fallingright") {
+      marioFacing = "fallingleft";
+      mario_XSpeed=mario_XAcceleration * -1;
+    
+    } else if (marioFacing == "jumpingleft" || marioFacing == "jumpingright") {
+      marioFacing = "jumpingleft";
+      mario_XSpeed=mario_XAcceleration * -1;
+    
+    } else if (marioFacing != "downleft" && marioFacing != "downright") {
       mario_XSpeed=mario_XAcceleration * -1; 
       marioFacing = "left";
-    } else { 
-      marioFacing = "downleft";
-      if (jumping)marioX+=mario_XSpeed * -1;
+    } else {
+      if (marioFacing == "downleft") {
+        marioFacing = "downleft";
+      } else marioFacing = "downright";
     }
   } else walkedleft = false;
   if (isRight) {
     walkedright = true;
-    if (marioFacing != "downleft" && marioFacing != "downright") {
+    if (marioFacing == "fallingleft" || marioFacing == "fallingright") {
+      marioFacing = "fallingright";
+      mario_XSpeed=mario_XAcceleration;
+    } else if (marioFacing == "jumpingleft" || marioFacing == "jumpingright") {
+      marioFacing = "jumpingright";
+      mario_XSpeed=mario_XAcceleration;
+      
+    } else if (marioFacing != "downleft" && marioFacing != "downright") {
       mario_XSpeed=mario_XAcceleration;
       marioFacing = "right";
     } else { 
-      marioFacing = "downright";
-      if (jumping)marioX+=mario_XSpeed;
+      if (marioFacing == "downleft") {
+        marioFacing = "downleft";
+      } else marioFacing = "downright";
+      
     }
   } else walkedright = false;
   if (isDown) { 
@@ -100,14 +125,25 @@ void draw() {
       marioFacing = "downright";
     } else marioFacing = "downleft";
   }
-  if (isUp)if (!jumping)if (marioGravitySpeed > -10) {
+  if (isUp)if (marioFacing != "downleft" && marioFacing != "downright")if (!jumping)if (marioGravitySpeed > -10) {
     marioGravitySpeed = JumpSpeed;
+    if(marioFacing == "left")marioFacing = "jumpingleft";
+    if(marioFacing == "right")marioFacing = "jumpingright";
     jumpsound.play(0.5);
   }
+  if (marioFacing == "jumpingleft" || marioFacing == "jumpingright") {
+    if (marioGravitySpeed > 0) {
+      if (marioFacing == "jumpingleft") {
+        marioFacing = "fallingleft";
+      } else marioFacing = "fallingright";
+    }
+  }
   if (!walkedleft && !walkedright)mario_XSpeed = 0;
-  //if (mario_XSpeed > mario_XAcceleration*4)mario_XSpeed = mario_XAcceleration*4;
-  //if (mario_XSpeed < mario_XAcceleration*-4)mario_XSpeed = mario_XAcceleration*-4;
-  marioX += mario_XSpeed;
+
+  if (marioFacing == "downleft" || marioFacing == "downright") {
+    if(jumping)marioX += mario_XSpeed;
+  
+  } else if (marioFacing != "downleft" && marioFacing != "downright")marioX += mario_XSpeed;
   
   translate(marioX * -1 + width/2, marioY * -1 + height/2);
   draw_background("forest");
@@ -141,9 +177,32 @@ void draw() {
   //fill(0);
   //if (mario_XSpeed > 0)mario_XSpeed -=mario_XAcceleration/2;
   //if (mario_XSpeed < 0)mario_XSpeed +=mario_XAcceleration/2;
+  if (!jumping) {
+    print(marioFacing);
+    if (marioFacing == "jumpingleft" || marioFacing == "jumpingright" || marioFacing == "fallingleft" || marioFacing == "fallingright") {
+      print("da");
+      if (marioFacing == "jumpingleft") {
+        marioFacing = "left";
+      } else if (marioFacing == "jumpingright") {
+        marioFacing = "right";
+      } else if (marioFacing == "fallingleft") {
+        marioFacing = "left";
+      } else if (marioFacing == "fallingright") {
+        marioFacing = "right";
+      }
+    }
+  }
 }
 void drawMario() {
-  if (marioFacing == "left") {
+  if (marioFacing == "fallingright") {
+    image(mariofallright, marioX, marioY + -8, marioSizeX, marioSizeY);
+  } else if (marioFacing == "fallingleft") {
+    image(mariofallleft, marioX, marioY + -8, marioSizeX, marioSizeY);
+  } else if (marioFacing == "jumpingright") {
+    image(mariojumpright, marioX, marioY + -8, marioSizeX, marioSizeY);
+  } else if (marioFacing == "jumpingleft") {
+    image(mariojumpleft, marioX, marioY + -8, marioSizeX, marioSizeY);
+  } else if (marioFacing == "left") {
     if (walkedleft) {
       if (marioWalkSprite < 5) {
         image(leftmario, marioX, marioY + -8, marioSizeX, marioSizeY);
@@ -155,8 +214,7 @@ void drawMario() {
     } else {
       image(leftmario, marioX, marioY + -8, marioSizeX, marioSizeY);
     }
-  }
-  if (marioFacing == "right") {
+  } else if (marioFacing == "right") {
     if (walkedright) {
       if (marioWalkSprite < 5) {
         image(rightmario, marioX, marioY + -8, marioSizeX, marioSizeY);
