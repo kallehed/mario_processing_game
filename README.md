@@ -1,3 +1,4 @@
 # mario_processing_game
-A mario game done in the processing language
-and is not finished
+A W.I.P. mario game done in the processing language
+
+Move with the arrows
