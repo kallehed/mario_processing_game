@@ -1,11 +1,19 @@
 import processing.sound.*;
 
+SoundFile gatesound;
+SoundFile overworldsong;
+SoundFile coinsound;
 SoundFile kicksound;
 SoundFile jumpsound;
 SoundFile deathsound;
+PImage checkP1, checkP2, checkP3, checkP4;
 PImage koopaleft, koopaleftwalk, kooparight, kooparightwalk;
 PImage block1;
 PImage block2;
+PImage luckyblock;
+PImage coin;
+PImage faceblock;
+PImage noneblock;
 PImage leftmario;
 PImage rightmario;
 PImage downrightmario;
@@ -19,12 +27,21 @@ PImage mariofallleft;
 PImage mariofallright;
 PImage mariodead;
 
-int marioDieY = 0; // what Y is the lava?
+float checkTime = 0;
+int[] en_Ospeed = {};
+int musicTime = 0;
+int[] luckyY = {};
+int[] luckyX = {};
+int[] luckGotItem = {};
+int marioDieY = 0; // what Y is the lava? // chosen in setup, sorry!
 int marioDeadFail = 0;
 int marioDeadX = 0;
 int marioDeadY = 0;
 int blockSizeX = 32;
 int blockSizeY = 32;
+int[] DcoinX = {};
+int[] DcoinY = {};
+int[] DcoinTime = {};
 int[] XposList = {};
 int[] YposList = {};
 int[] en_startXposList = {};
@@ -36,7 +53,8 @@ String[] en_facingList = {};
 String[] en_List = {};
 int en_speed = 1;
 
-
+int coinSizeX = 24;
+int coinSizeY = 32;
 int blockNum = 0;
 int marioWalkSprite = 0;
 int marioX = 0;
@@ -50,12 +68,15 @@ float mario_XSpeed = 0;
 float mario_XAcceleration = 4;
 String marioFacing = "right"; // where mario is looking, left or right
 float GravityAcceleration = 1;
+int shakeBlockX = 5245224;
+int shakeBlockY = 5264673;
 
 float JumpSpeed = -18;
 boolean jumped = false;
 boolean walkedleft = false;
 boolean walkedright = true;
 boolean marioDead = false;
+boolean gateopened = false;
 
 int blackoutAlpha = 0;
 void setup() {
@@ -64,9 +85,17 @@ void setup() {
   jumpsound = new SoundFile(this, "mario_jump.wav");
   deathsound = new SoundFile(this, "mario_death.wav");
   kicksound = new SoundFile(this, "mario_kick.wav");
+  coinsound = new SoundFile(this, "get_coin.wav");
+  overworldsong = new SoundFile(this, "overworldsong.wav");
+  gatesound = new SoundFile(this, "gatesound.wav");
   
   block1 = loadImage("block1.png");
   block2 = loadImage("block2.png");
+  luckyblock = loadImage("lucky_block.png");
+  noneblock = loadImage("none_block.png");
+  coin = loadImage("coin.png");
+  faceblock = loadImage("face_block.png");
+  
   leftmario = loadImage("leftmario.png");
   rightmario = loadImage("rightmario.png");
   downrightmario = loadImage("downrightmario.png");
@@ -83,44 +112,122 @@ void setup() {
   mariofallright = loadImage("mariofallright.png");
   mariodead = loadImage("mariodead.png");
   
+  checkP1 = loadImage("flag1.png");
+  checkP2 = loadImage("flag2.png");
+  checkP3 = loadImage("flag3.png");
+  checkP4 = loadImage("flag4.png");
+  
+  marioDieY = height * 2;
+  
   forest_back = loadImage("forest_back.png");
   
+  createLucky(35,9);
+  createLucky(37,9);
+  createLucky(39,9);
+  createLucky(50,11);
+  createLucky(52,11);
+  createLucky(155, 11);
+  createLucky(157, 11);
+  createLucky(159, 11);
   
-  create_enemy("koopa", 13, -4, -1);
-  create_enemy("koopa", 13, 1,4);
-  marioDieY = height;
+  createLucky(189, -8);
+  createLucky(191, -8);
+  createLucky(193, -8);
+  createLucky(208,10);
+  //create_enemy("koopa", 13, -4, -1);
+  
+
+  create_enemy("koopa", 10, 31,20,1);
+  create_enemy("koopa", 10, 20,31,1);
+  create_enemy("koopa", 10, 25,31,1);
+  create_enemy("koopa", 10, 31,25,1);
+  create_enemy("koopa", 10, 20,26,1);
+  create_enemy("koopa", 10, 26,20,1);
+  create_enemy("koopa", 10, 23,31,1);
+  create_enemy("koopa", 10, 31,23,1);
+  create_enemy("koopa", 10, 23,29,1);
+  create_enemy("koopa", 10, 29,23,1);
+  create_enemy("koopa", 13, 70, 75,1);
+  create_enemy("koopa", 13, 85, 90,1);
+  create_enemy("koopa", 9, 110, 119,6);
+  create_enemy("koopa", 14, 228, 240, 6);
+
+  
+  
+  
+  overworldsong.play(0.5);
+  musicTime = millis() / 1000;
+ 
 }
 void draw() {
   
-
+ 
   background(255);
   pushMatrix();
-  
+  if (overworldsong.duration() < (millis()/1000) - musicTime) {
+    overworldsong.play(0.5);
+    musicTime = millis();
+  }
   
   XposList = new int[0];
   YposList = new int[0];
   if (!marioDead)checktheway();
   
   
-  if (!marioDead)translate(marioX * -1 + width/2, marioY * -1 + height/2);
+  if (!marioDead)translate(marioX * -1 + width/2, (marioY * -1 + height/2) + 50);
   if (marioDead)translate(marioDeadX * -1 + width/2, marioDeadY * -1 + height/2);
   draw_background("forest");
-  
-  blocklineX(block1, 15, -16, 16);
-  blocklineY(block2, 0, 5, 13);
-  blocklineX(block1, 5, 0, 8);
-  blocklineY(block2, 8, 5, 15);
-  blocklineX(block1, 11, 0, 6);
-  blocklineX(block2, 8, 0, 6);
+  drawCheckP(261,13);
+  //DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS
+  blocklineX(block2, 15, -1, 100);
 
+  blocklineX(block2, 12, 20, 32);
+  blocklineX(block2, 11, 43, 48);
+  blocklineX(block1, 12, 60, 61);
+  
+  blocklineX(block1, 14, 100, 104);
+  blocklineX(block1, 13, 104, 108);
+  blocklineX(block1, 12, 108, 110);
+  blocklineX(block1, 11, 110, 120);
+  blocklineY(block1, 120, 11, 16);
+  blocklineX(block2, 16, 120, 204);
+  blocklineX(block1, 13, 130, 131);
+  blocklineY(block1, 140, 13, 16);
+  blocklineY(block1, 141, 13, 16);
+  blocklineY(block1, 144, 12, 16);
+  blocklineY(block1, 145, 12, 16);
+  blocklineX(block2, 12, 170, 174);
+  blocklineX(block2, 12, 177, 182);
+  blocklineX(block2, 9, 172, 179);
+  blocklineX(faceblock, 7, 182,184);
+  blocklineX(faceblock, 3, 187, 189);
+  blocklineX(faceblock, -1, 183, 186); 
+  blocklineX(faceblock, -5, 187, 196);
+  blocklineX(block2, 11, 200, 206);
+  blocklineY(block2, 204, 14, 17); 
+  blocklineX(block2, 14,205, 215);
+  blocklineY(block2, 215, 14, 18);
+  blocklineY(block1, 218, 16,18);
+  blocklineX(block1, 16, 219, 320);
+  blocklineY(block2, 226, 13, 16);
+  blocklineY(block2, 227, 13, 16);
+  blocklineY(block2, 241, 12, 16);
+  blocklineY(block2, 242, 12, 16);
+  
+  //DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS
+  
+  drawLucky();
+  drawDCoins();
   draw_enemy();
+
   
   if (marioDead) {
+    overworldsong.stop();
     if (marioDeadFail == 1333777777) {
       popMatrix();
       blackScreen();
     } else {
-      //translate(marioDeadX * -1 + width/2, marioDeadY * -1 + height/2);
+
       image(mariodead, marioX, marioY + -8, marioSizeX, marioSizeY);
   
       if (marioDeadFail > 10)marioDeadFail = 0;
@@ -153,6 +260,7 @@ void draw() {
     DieOfYLimit(); // checks if under limit
     ////////////////////////////////////////////////////////////////////////////
     touchingDownBlocks();
+    
   
     if (walkedleft)touchingLeftBlocks();
     if (walkedright)touchingRightBlocks();
@@ -161,13 +269,13 @@ void draw() {
     
     popMatrix();
     move_en();
-    //text(marioFacing, 100,100); //draws what way you're looking
+    //text("X " + marioX / 32 + "    Y " + marioY/32 , 100,100);
+    
     //String str = String.valueOf(jumping);
     //text(str, 100, 100);
     //text(mario_XSpeed, 100, 100);
     //fill(0);
-    //if (mario_XSpeed > 0)mario_XSpeed -=mario_XAcceleration/2;
-    //if (mario_XSpeed < 0)mario_XSpeed +=mario_XAcceleration/2;
+
     if (!jumping) {
       
       if (marioFacing == "jumpingleft" || marioFacing == "jumpingright" || marioFacing == "fallingleft" || marioFacing == "fallingright") {
@@ -181,6 +289,33 @@ void draw() {
         } else if (marioFacing == "fallingright") {
           marioFacing = "right";
         }
+      }
+    }
+  }
+}
+void drawCheckP(int X,int Y) {
+  X = X * blockSizeX;
+  Y = Y * blockSizeY;
+  Y = Y - 20;
+  if (checkTime < 1) {
+    image(checkP1,X,Y, 64,128);
+    checkTime += 0.2;
+  } else if (checkTime < 2) {
+    image(checkP2, X, Y, 64, 128);
+    checkTime+=0.2;
+  } else if (checkTime < 3) {
+    image(checkP3, X, Y, 64, 128);
+    checkTime+=0.2;
+  } else if (checkTime < 4) {
+    image(checkP4, X, Y, 64, 128);
+    checkTime = 0;
+  }
+  //check if touch
+  if (!gateopened) {
+    if (marioX + marioSizeX > X && marioX < X + 64) { // mario X inside
+      if (marioY + marioSizeY> Y && marioY < Y + 128) { // mario Y inside
+        gatesound.play(0.5);
+        gateopened = true;
       }
     }
   }
@@ -272,17 +407,16 @@ void draw_background(String back) {
       imageMode(CENTER);
       image(forest_back, marioX * 0.8, marioY * 0.8, width * 2, height * 2);
       image(forest_back, marioX * 0.8 + width*2, marioY * 0.8, width * 2, height * 2);
-      image(forest_back, marioX * 0.8 - width*2, marioY * 0.8, width * 2, height * 2);
+      image(forest_back, marioX * 0.8 + width*4, marioY * 0.8, width * 2, height * 2);
       imageMode(CORNER);
     } else {
       imageMode(CENTER);
       image(forest_back, marioDeadX * 0.8, marioDeadY * 0.8, width * 2, height * 2);
       image(forest_back, marioDeadX * 0.8 + width*2, marioDeadY * 0.8, width * 2, height * 2);
-      image(forest_back, marioDeadX * 0.8 - width*2, marioDeadY * 0.8, width * 2, height * 2);
+      image(forest_back, marioDeadX * 0.8 + width*4, marioDeadY * 0.8, width * 2, height * 2);
       imageMode(CORNER);
     }
-  }
-  
+  } 
 }
 void keyPressed() {
   setMove(keyCode, true);
@@ -291,7 +425,9 @@ void keyReleased() {
   if (keyCode == UP) {
     jumped = false;
   }
-  if (marioGravitySpeed < JumpSpeed/2)marioGravitySpeed=+JumpSpeed/2;
+  if (keyCode == UP) {
+    if (marioGravitySpeed < JumpSpeed/2)marioGravitySpeed=+JumpSpeed/2;
+  }
   if (marioFacing == "downright" || marioFacing == "downleft") {
     if (marioFacing == "downright")marioFacing = "right";
     else marioFacing = "left";
@@ -322,17 +458,27 @@ void move_en() {
       en_XposList[index-1] += random(-5,5);
     } else {
       en_spriteList[index-1] += 1;
-      if (en_spriteList[index-1] > 24)en_spriteList[index-1] = 0;
+      if (en_spriteList[index-1] > 24)en_spriteList[index-1] = 0;//switches sprite
       
-      if (en_startXposList[index-1] == en_XposList[index-1] || en_endXposList[index-1] == en_XposList[index-1]) {
-        if (en_facingList[index-1] == "left")en_facingList[index-1] = "right";
-        else en_facingList[index-1] = "left";
-        //move time
-      }
-      if (en_facingList[index-1] == "left") {
-        en_XposList[index-1] -= en_speed;
+      if (en_startXposList[index-1] > en_endXposList[index-1]) { // makes it so the ones that start left dont crash
+        if (en_startXposList[index-1] <= en_XposList[index-1] || en_endXposList[index-1] >= en_XposList[index-1]) {
+          if (en_facingList[index-1] == "left")en_facingList[index-1] = "right";
+          else en_facingList[index-1] = "left";
+          //move time
+        }
       } else {
-        en_XposList[index-1] += en_speed;
+        if (en_startXposList[index-1] >= en_XposList[index-1] || en_endXposList[index-1] <= en_XposList[index-1]) {
+          if (en_facingList[index-1] == "left")en_facingList[index-1] = "right";
+          else en_facingList[index-1] = "left";
+          //move time
+        }
+      }
+      
+      
+      if (en_facingList[index-1] == "left") {
+        en_XposList[index-1] -= en_Ospeed[index-1];
+      } else {
+        en_XposList[index-1] += en_Ospeed[index-1];
       }
     }
   }
@@ -363,8 +509,11 @@ void draw_enemy() {
     }
   }
 }
-void create_enemy(String enemy, int y, int x, int x2) {
+void create_enemy(String enemy, int y, int x, int x2, int speed) {
   //goes from x to x2 and then to x again...
+
+
+  en_Ospeed = append(en_Ospeed, speed);
   en_List = append(en_List, enemy);
   en_startXposList = append(en_startXposList, x * blockSizeX);
   en_YposList = append(en_YposList, y * blockSizeY + 16);
@@ -414,11 +563,12 @@ void touchingDownBlocks() { //Detects gravity, if touch block, go up
     if (marioX + blockSizeX -1 >= i && i + blockSizeX -1 >= marioX) {
       //( marios bottom is UNDER the blocks top)  (Marios bottom is ABOVE the blocks bottom)
       if (YposList[index -1] < marioY + blockSizeY && marioY + blockSizeY < YposList[index -1] + blockSizeY * 2) {
-        if (marioY > YposList[index-1] + 0) {
+        if (marioY > YposList[index-1] + 0) { // hit a roof
           jumping = true;
           marioY += marioGravitySpeed * -1;
+          checkiflucky(XposList[index-1], YposList[index-1]);
           marioGravitySpeed = 0;
-        } else {
+        } else { // hit rock bottom(ground)
           marioY += marioGravitySpeed * -1;
           marioGravitySpeed = 0;
         
@@ -515,6 +665,7 @@ void checktheway() {
   
   } else if (marioFacing != "downleft" && marioFacing != "downright")marioX += mario_XSpeed;
   
+
 }
 void blackScreen() {
   if (blackoutAlpha > 255)noLoop();
@@ -527,4 +678,70 @@ void blackScreen() {
   blackoutAlpha += 8;
   //println(blackoutAlpha);
   
+}
+void createLucky(int X,int Y) {
+  luckyX = append(luckyX, X * blockSizeX);
+  luckyY = append(luckyY, Y * blockSizeY);
+  luckGotItem = append(luckGotItem, 1);
+  DcoinX = append(DcoinX, X * blockSizeX);
+  DcoinY = append(DcoinY, Y * blockSizeY);
+  DcoinTime = append(DcoinTime, 0);
+}
+void drawLucky() {
+  int index = 0;
+  for (int i : luckyX) {
+    XposList = append(XposList, i);
+    YposList = append(YposList, luckyY[index]);
+    if (i == shakeBlockX && luckyY[index] == shakeBlockY) { //shakes the block when hit
+      //print("lora!");
+      if (luckGotItem[index] == 1) { // block has items
+          image(luckyblock, i, luckyY[index] + -10, blockSizeX, blockSizeY);
+      } else { // block does not have items
+          image(noneblock, i, luckyY[index] + -10, blockSizeX, blockSizeY);
+      }
+      shakeBlockY = 2374293;
+      shakeBlockX = 2425882;
+      
+    } else {
+      if (luckGotItem[index] == 1) { // block has items
+        image(luckyblock, i, luckyY[index], blockSizeX, blockSizeY);
+      } else { // block does not have items
+        image(noneblock, i, luckyY[index], blockSizeX, blockSizeY);
+      }
+    }
+    index+=1;
+  }
+}
+void checkiflucky(int X, int Y) {
+  int index = 0;
+  for (int i : luckyX) {
+    if (i == X && luckyY[index] == Y) { // the roof Mo hit is a actually lucky block!!
+      shakeBlockX = X;
+      shakeBlockY = Y;
+      if (luckGotItem[index] == 1) { // the block has items in it!!
+        DcoinTime[index] = 1;
+        luckGotItem[index] = 0;
+        coinsound.play(0.5);
+      }
+      
+    }
+    index += 1;
+  }
+}
+void drawDCoins() {
+  int index = 0;
+  //print("pala");
+  for (int i : DcoinX) {
+    //print("sala");
+    if (DcoinTime[index] > 0) { // a coin!
+      //print("hejsan!");
+      image(coin, i + 4, DcoinY[index] - blockSizeY, coinSizeX, coinSizeY);
+      DcoinY[index] += -2;
+      DcoinTime[index] += 1;
+    }
+    if (DcoinTime[index] > 20) {
+      DcoinTime[index] = 0;
+    }
+    index +=1;
+  }
 }
