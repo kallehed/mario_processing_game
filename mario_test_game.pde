@@ -1,13 +1,17 @@
 import processing.sound.*;
 
+PFont scorefont;
 SoundFile pipesound;
 SoundFile winsound;
 SoundFile gatesound;
+SoundFile airsong;
 SoundFile overworldsong;
 SoundFile coinsound;
 SoundFile kicksound;
 SoundFile jumpsound;
 SoundFile deathsound;
+SoundFile backgroundsong;
+PImage coinhud;
 PImage pipe1, pipe2;
 PImage pipeB, pipeG, pipeR, pipeY; //blue,green,red,yellow
 PImage pipeBtop,pipeGtop,pipeRtop,pipeYtop;
@@ -25,7 +29,11 @@ PImage leftmario;
 PImage rightmario;
 PImage downrightmario;
 PImage downleftmario;
-PImage forest_back;
+
+PImage backforest;
+PImage backmountains;
+PImage backrock;
+
 PImage marioleftwalk;
 PImage mariorightwalk;
 PImage mariojumpleft;
@@ -35,6 +43,10 @@ PImage mariofallright;
 PImage mariodead;
 PImage mariowin;
 
+PImage background;
+
+PImage[] warpBack = new PImage[0];
+PImage[] warpBack2 = new PImage[0];
 int[] warpListX = {};
 int[] warpListY = {};
 int[] warpListX2 = {};
@@ -66,6 +78,8 @@ String[] en_facingList = {};
 String[] en_List = {};
 int en_speed = 1;
 
+int coinCounter;
+int backindex = 0;
 int coinSizeX = 24;
 int coinSizeY = 32;
 int blockNum = 0;
@@ -98,20 +112,24 @@ int blackoutAlpha = 0;
 int GoalY = 15;
 int winTime = 0;
 int warpTime = 0;
+int warpIndex2 = 0;
 void setup() {
-  size(512, 512); //16 kuber = linje genom skärmnen( 16 * 32 = 512)
-  frameRate(60);
+  size(512, 512,P2D); //16 kuber = linje genom skärmnen( 16 * 32 = 512)
+  frameRate(40);
+  scorefont = loadFont("scorefont.vlw");
   jumpsound = new SoundFile(this, "mario_jump.wav");
   deathsound = new SoundFile(this, "mario_death.wav");
   kicksound = new SoundFile(this, "mario_kick.wav");
   coinsound = new SoundFile(this, "get_coin.wav");
   overworldsong = new SoundFile(this, "overworldsong.wav");
+  airsong = new SoundFile(this, "airsong.wav");
   gatesound = new SoundFile(this, "gatesound.wav");
   winsound = new SoundFile(this, "win.wav");
-  pipesound = new SoundFile(this, "pipesound.mp3");
+  pipesound = new SoundFile(this, "pipesound.wav");
   
   pipeB = loadImage("pipeB.png");
   pipeBtop = loadImage("pipeBtop.png");
+  coinhud = loadImage("coins.png");
 
   pipeG = loadImage("pipeG.png");
   pipeGtop = loadImage("pipeGtop.png");
@@ -155,9 +173,9 @@ void setup() {
   goal = loadImage("goal.png");
   line = loadImage("line.png");
   
-  marioDieY = height * 3;
-  
-  forest_back = loadImage("forest_back.png");
+  backforest = loadImage("backforest.png");
+  backmountains = loadImage("backmountains.png");
+  backrock = loadImage("backrock.png");
   
   createLucky(35,9);
   createLucky(37,9);
@@ -195,9 +213,12 @@ void setup() {
   
   
   
-  overworldsong.loop(0.5);
+  
   musicTime = 0;
- 
+  marioDieY = height * 3;
+  setBack(backmountains);
+  backgroundsong = airsong;
+  backgroundsong.loop();
 }
 void draw() {
   
@@ -218,7 +239,7 @@ void draw() {
   
   if (!marioDead)translate(marioX * -1 + width/2, (marioY * -1 + height/2) + 50);
   if (marioDead)translate(marioDeadX * -1 + width/2, (marioDeadY * -1 + height/2) + 50);
-  draw_background("forest");
+  draw_background(background);
   scenery(bush,-1,14);
   scenery(bigbush,7,14);
   scenery(bushsmall,39,14);
@@ -286,10 +307,10 @@ void draw() {
   if (warp)drawMario();
   pipe(64,14,"blue", 2);
   pipe(64,34,"blue",3);
-  warphole(64,14-2,64,33-2);
+  warphole(64,11,64,30, backforest, backmountains);
   pipe(78,34, "green", 3);
-  pipe(96,14, "green",3);
-  warphole(78,32-2,96,13-2);
+  pipe(96,14, "green",2);
+  warphole(78,30,96,11, backmountains, backforest);
   pipe(140, 15, "red",2);
   pipe(144, 15, "yellow",3);
   pipe(226, 15, "yellow",3);
@@ -315,7 +336,10 @@ void draw() {
       marioX = warpX;
       marioY = warpY-30;
       warpTime += 1;
-      pipesound.play(1,1,0.1);
+      if(warpIndex2 == 2) {
+        setBack(warpBack2[backindex]);
+      } else setBack(warpBack[backindex]);
+      pipesound.play(0.5);
     } else {
       marioY += 1;
       warpTime+=1;
@@ -323,7 +347,7 @@ void draw() {
     popMatrix();
   } else if (WIN) {
     if (musicTime == 0) {
-      overworldsong.stop();
+      backgroundsong.stop();
       musicTime = 1;
     }
     
@@ -340,7 +364,7 @@ void draw() {
   } else if (marioDead) {
     
     if (musicTime == 0) {
-      overworldsong.stop();
+      backgroundsong.stop();
       musicTime = 1;
     }
     if (marioDeadFail == 1333777777) {
@@ -391,8 +415,20 @@ void draw() {
     drawMario();
     
     popMatrix();
+    pushMatrix();
     move_en();
+    textSize(15);
     text("X " + marioX / 32 + "    Y " + marioY/32 , 100,100);
+    image(coinhud, width-150,10,32,16);
+    fill(0,0,0);
+    textSize(26);
+    textFont(scorefont);
+    if (coinCounter >= 100)coinCounter = 0;
+    text(coinCounter, width-150 + 40,27);
+    
+    
+    
+    popMatrix();
     
     //String str = String.valueOf(jumping);
     //text(str, 100, 100);
@@ -418,14 +454,20 @@ void draw() {
     }
   }
 }
+void setBack(PImage back) {
+  background = back;
+}
 void checkWarp() {
   int X, Y, X2, Y2, index = 0;
   
   for (int i : warpListX) {
+    
+    
     X = warpListX[index];
     X2 = warpListX2[index];
     Y = warpListY[index];
     Y2 = warpListY2[index];
+    i = i * 2; // blablablalblalb
 //      pipe < marioX  | marioX < pipeend
     if (marioX >  X && X+blockSizeX*1 - 5> marioX&& isDown) { // marioX inside pipeX
       //print("alaldS!");
@@ -433,29 +475,42 @@ void checkWarp() {
       if (marioY + blockSizeY <= Y +32&& marioY+blockSizeY>Y-1) {
         print("sdjais");
         //WARP
-        pipesound.play(1,1,0.1);
+        pipesound.play(0.5);
         warp = true;
         warpX = X2 + 10;
         warpY = Y2 + -5 + 32;
+        backindex = index;
+        warpIndex2 = 1;
+       
+        
       }
     }
     if (marioX >  X2 && X2+blockSizeX*1 - 5> marioX&& isDown) { // marioX inside pipeX
       //print("alaldS!");
 //       mario feet over warppoint// mariofeet under point+5    
       if (marioY + blockSizeY <= Y2 +32&& marioY+blockSizeY>Y2-1) {
-        print("sdjais");
+        //print("sdjais");
         //WARP
-        pipesound.play(1,1,0.1);
+        pipesound.play(0.5);
         warp = true;
         warpX = X + 10;
         warpY = Y + -5 +32;
+        backindex = index;
+        warpIndex2 = 2;
+
       }
     }
     index+=1;
   }
   
 }
-void warphole(int X,int Y,int X2,int Y2) {
+void warphole(int X,int Y,int X2,int Y2, PImage back, PImage back2) {
+  Y = 1+Y;
+  Y2 +=1;
+  warpBack = (PImage[])expand(warpBack,warpBack.length + 1);
+  warpBack[warpBack.length-1] = back;
+  warpBack2 = (PImage[])expand(warpBack2,warpBack2.length + 1);
+  warpBack2[warpBack.length-1] = back2;
   warpListX = append(warpListX, X*blockSizeX);
   warpListY = append(warpListY, Y*blockSizeY);
   warpListX2 = append(warpListX2, X2*blockSizeX);
@@ -521,9 +576,9 @@ void scenery(PImage img, int X,int Y) {
 
   X = X * blockSizeX;
   Y = Y * blockSizeY;
-  if (img == bigbush)image(img, X,Y - blockSizeY * 4, 144 * 2,80 * 2);
-  if (img == bush)image(img,X,Y - blockSizeY * 2, 95 * 2, 56 * 2);
-  if (img == bushsmall)image(img,X,Y,32*2,16*2);
+  if (img == bigbush)image(img, X,Y - blockSizeY * 4, 288,160);
+  if (img == bush)image(img,X,Y - blockSizeY * 2, 192, 112);
+  if (img == bushsmall)image(img,X,Y,64,32);
   //image(img, X,Y, *2, *2);
   
 }
@@ -555,7 +610,7 @@ void drawCheckP(int X,int Y) {
   }
 }
 void enemyDIE(int enemy) {
-  marioGravitySpeed = JumpSpeed;
+  marioGravitySpeed = -10; // JUMP ON ENEMY
   en_List[enemy] = "dead";
   kicksound.play(0.5);
   
@@ -637,21 +692,20 @@ void drawMario() {
   if (marioFacing == "downleft")image(downleftmario, marioX, marioY +10 -8, marioSizeX, marioSizeY -10);
   if (marioWalkSprite > 9)marioWalkSprite = 0;
 }
-void draw_background(String back) {
-  if (back == "forest") {
-    if (!marioDead) {
-      imageMode(CENTER);
-      image(forest_back, marioX * 0.8, marioY * 0.8, width * 2, height * 2);
-      image(forest_back, marioX * 0.8 + width*2, marioY * 0.8, width * 2, height * 2);
-      image(forest_back, marioX * 0.8 + width*4, marioY * 0.8, width * 2, height * 2);
-      imageMode(CORNER);
-    } else {
-      imageMode(CENTER);
-      image(forest_back, marioDeadX * 0.8, marioDeadY * 0.8, width * 2, height * 2);
-      image(forest_back, marioDeadX * 0.8 + width*2, marioDeadY * 0.8, width * 2, height * 2);
-      image(forest_back, marioDeadX * 0.8 + width*4, marioDeadY * 0.8, width * 2, height * 2);
-      imageMode(CORNER);
-    }
+void draw_background(PImage back) {
+  
+  if (!marioDead) {
+    imageMode(CENTER);
+    image(back, marioX * 0.8, (marioY + -150) * 0.8, width * 2, height * 2);
+    image(back, marioX * 0.8 + 1024, (marioY+-150) * 0.8, width * 2, height * 2);
+    image(back, marioX * 0.8 + 1024*2, (marioY+-150) * 0.8, width * 2, height * 2);
+    imageMode(CORNER);
+  } else {
+    imageMode(CENTER);
+    image(back, marioDeadX * 0.8, (marioDeadY+-150) * 0.8, width * 2, height * 2);
+    image(back, marioDeadX * 0.8 + 1024, (marioDeadY+-150) * 0.8, width * 2, height * 2);
+    image(back, marioDeadX * 0.8 + 1024*2, (marioDeadY+-150) * 0.8, width * 2, height * 2);
+    imageMode(CORNER);
   } 
 }
 void keyPressed() {
@@ -972,6 +1026,7 @@ void checkiflucky(int X, int Y) {
       if (luckGotItem[index] == 1) { // the block has items in it!!
         DcoinTime[index] = 1;
         luckGotItem[index] = 0;
+        coinCounter +=1;
         coinsound.play(0.5);
       }
       
