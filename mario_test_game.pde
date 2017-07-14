@@ -1,5 +1,5 @@
 import processing.sound.*;
-
+//CREATE ALL VARIABLES
 PFont scorefont;
 SoundFile pipesound;
 SoundFile winsound;
@@ -78,6 +78,7 @@ String[] en_facingList = {};
 String[] en_List = {};
 int en_speed = 1;
 
+int runBack = 0;
 int coinCounter;
 int backindex = 0;
 int coinSizeX = 24;
@@ -113,9 +114,11 @@ int GoalY = 15;
 int winTime = 0;
 int warpTime = 0;
 int warpIndex2 = 0;
-void setup() {
-  size(512, 512,P2D); //16 kuber = linje genom skärmnen( 16 * 32 = 512)
-  frameRate(40);
+boolean cheats = false,developer=false;
+void setup() {//SETUP ALL THE IMAGES AND SOUND AND OTHER STUFF
+  size(512, 512,P3D); //16 kuber = linje genom skärmnen( 16 * 32 = 512)
+  //fullScreen(P3D);
+  frameRate(50); //NORMAL = 40-60/50=50
   scorefont = loadFont("scorefont.vlw");
   jumpsound = new SoundFile(this, "mario_jump.wav");
   deathsound = new SoundFile(this, "mario_death.wav");
@@ -190,6 +193,7 @@ void setup() {
   createLucky(191, -8);
   createLucky(193, -8);
   createLucky(208,10);
+  createLucky(71,30);
   //create_enemy("koopa", 13, -4, -1);
   
 
@@ -222,12 +226,9 @@ void setup() {
 }
 void draw() {
   
- 
-  background(255);
+  //background(255);
   pushMatrix();
-  
-    
-  
+
   XposList = new int[0];
   YposList = new int[0];
   warpListX = new int[0];
@@ -235,11 +236,11 @@ void draw() {
   warpListY = new int[0];
   warpListY2 = new int[0];
   if (!marioDead && !WIN && !warp)checktheway();
-  
-  
   if (!marioDead)translate(marioX * -1 + width/2, (marioY * -1 + height/2) + 50);
   if (marioDead)translate(marioDeadX * -1 + width/2, (marioDeadY * -1 + height/2) + 50);
+  //rotateZ(radians(mouseX));
   draw_background(background);
+  //SCENERY!!!
   scenery(bush,-1,14);
   scenery(bigbush,7,14);
   scenery(bushsmall,39,14);
@@ -262,18 +263,17 @@ void draw() {
   scenery(bigbush, 228,15);
   scenery(bigbush,247,15);
   scenery(bush,245,15);
+  // STOP THE SCENERY
   
-  drawGoal(253,GoalY);
+  drawGoal(253,GoalY);//DRAW GOAL
   
-  drawCheckP(134,13);
+  drawCheckP(134,13);//DRAW CHECKPOINT
+  
   //DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS
-  
   blocklineX(block2, 15, -1, 100);
-
   blocklineX(block2, 12, 20, 32);
   blocklineX(block2, 11, 43, 48);
   blocklineX(block1, 12, 60, 61);
-  
   blocklineX(block1, 14, 100, 104);
   blocklineX(block1, 13, 104, 108);
   blocklineX(block1, 12, 108, 110);
@@ -281,10 +281,6 @@ void draw() {
   blocklineY(block1, 120, 11, 16);
   blocklineX(block2, 16, 120, 204);
   blocklineX(block1, 13, 130, 131);
-  //blocklineY(block1, 140, 13, 16);
-  //blocklineY(block1, 141, 13, 16);
-  //blocklineY(block1, 144, 12, 16);
-  //blocklineY(block1, 145, 12, 16);
   blocklineX(block2, 12, 170, 174);
   blocklineX(block2, 12, 177, 182);
   blocklineX(block2, 9, 172, 179);
@@ -298,13 +294,12 @@ void draw() {
   blocklineY(block2, 215, 14, 18);
   blocklineY(block1, 218, 16,18);
   blocklineX(block1, 16, 219, 260);
-  //blocklineY(block2, 226, 13, 16);
-  //blocklineY(block2, 227, 13, 16);
-  //blocklineY(block2, 241, 12, 16);
-  //blocklineY(block2, 242, 12, 16);
   blocklineX(faceblock,35,63,80);
-  //pipe(0,14,"green",6) X, Y, Color, Len, 
-  if (warp)drawMario();
+  //STOP DRAWING BLOCKS!
+  
+  if (warp)drawMario(); // DRAWS MARIO UNDER THE PIPE IF WARP
+  
+  // PIPES AND WARPS
   pipe(64,14,"blue", 2);
   pipe(64,34,"blue",3);
   warphole(64,11,64,30, backforest, backmountains);
@@ -315,181 +310,87 @@ void draw() {
   pipe(144, 15, "yellow",3);
   pipe(226, 15, "yellow",3);
   pipe(241, 15, "green",3);
+  warphole(140,12,144,11,backmountains,backmountains);
+  // STOP THE PIPES AND WARPS
   
   
-  //DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS//DRAW BLOCKS
+  drawLucky();//DRAWS ALL LUCKYBLOCKS
+  drawDCoins();//DRAWS ALL DISAPEARINGCOINS
+  draw_enemy();//DRAWS ALL ENEMYS
   
-  drawLucky();
-  drawDCoins();
-  draw_enemy();
-  //println(mario_XSpeed);
+  
   if (warp) {
-    println(warpTime);
-    if (warpTime == 90) {
-      warp = false;
-      warpTime = 0;
-    } else if (warpTime > 60) {
-      marioY+=-1;
-      warpTime+=1;
-    }
-    else if (warpTime == 60) {
-      marioX = warpX;
-      marioY = warpY-30;
-      warpTime += 1;
-      if(warpIndex2 == 2) {
-        setBack(warpBack2[backindex]);
-      } else setBack(warpBack[backindex]);
-      pipesound.play(0.5);
-    } else {
-      marioY += 1;
-      warpTime+=1;
-    }
-    popMatrix();
+    
+    WARP();
   } else if (WIN) {
-    if (musicTime == 0) {
-      backgroundsong.stop();
-      musicTime = 1;
-    }
-    
-    if(marioFacing != "right"||marioFacing != "win")marioFacing = "right";
-    if (winTime < 200)marioX +=1;
-    if (marioY < GoalY * 32)marioY += 4;
-    if (marioY > GoalY * 32)marioY += -4;
-    if (winTime > 200)marioFacing = "win";
-    drawMario();
-    popMatrix();
-    if(winTime > 250)blackScreen();
-    winTime+=1;
-    println(winTime);
+    WIN();
   } else if (marioDead) {
-    
-    if (musicTime == 0) {
-      backgroundsong.stop();
-      musicTime = 1;
-    }
-    if (marioDeadFail == 1333777777) {
-      popMatrix();
-      blackScreen();
-    } else {
-
-      image(mariodead, marioX, marioY + -8, marioSizeX, marioSizeY);
-  
-      if (marioDeadFail > 10)marioDeadFail = 0;
-      if (marioDeadFail > 1) {
-        marioDeadFail += 1;
-      } else {
-        if (marioY < marioDeadY + -100) {
-          marioDeadFail = 1;
-        }
-        if (marioDeadFail == 1) {
-          marioY += 9;
-          if (marioY > marioDeadY + height/3 * 2) { 
-            
-            marioDeadFail = 1333777777;
-          }
-        } else {
-          marioY += -8;
-        }
-      }
-      popMatrix();
-    }
-  } else {
+    marioDIE();
+  } else {//NORMAL 
     touchEnemy(); // checks if you touch an enemy
-    /////////////////////////////////////////////// does all the gravity jump stuff
-    marioGravitySpeed += GravityAcceleration;
-    if (marioGravitySpeed > GravityAcceleration*16) {
-      marioGravitySpeed = GravityAcceleration*16;
-    }
-    marioY += marioGravitySpeed; // moves mario up or down
-    DieOfYLimit(); // checks if under limit
-    ////////////////////////////////////////////////////////////////////////////
+    gravityStuffs();//Does all the gravity jump stuffs
+    touchingDownBlocks();//check if you should not go through ground
+    checkWarp();//Check if you should warp
+    if(mario_XSpeed<0)touchingLeftBlocks();//check if you shouldn't go through left wall
+    if(mario_XSpeed>0)touchingRightBlocks();//check if you shouldn't go through right wall
     
-    touchingDownBlocks();
-    checkWarp();
-    
-    
-  
-    if (walkedleft)touchingLeftBlocks();
-    if (walkedright)touchingRightBlocks();
-    
-    drawMario();
+    drawMario();//draws mario
     
     popMatrix();
+    // TEXT STUFF TEXT STUFF TEXT STUFF TEXT STUFF ..............................
     pushMatrix();
-    move_en();
+    
     textSize(15);
-    text("X " + marioX / 32 + "    Y " + marioY/32 , 100,100);
-    image(coinhud, width-150,10,32,16);
+    if(developer)text("FPS: "+frameRate,50,50);
+    if(developer)text("X " + marioX / 32 + "    Y " + marioY/32 , 100,100);
+    if(developer)text("SPEED " + mario_XSpeed, 400,100);
+    image(coinhud, width-150,10,32,16);//DRAWS THE COIN COUNTER THINGY
     fill(0,0,0);
     textSize(26);
     textFont(scorefont);
     if (coinCounter >= 100)coinCounter = 0;
-    text(coinCounter, width-150 + 40,27);
-    
-    
-    
+    text(coinCounter, width-150 + 40,27);//DRAWS THE COINS YOU HAVE
+    //TEXT STUFF TEXT STUFF TEXT STUFF TEXT STUFF ..............................
     popMatrix();
+    move_en();//MOVES ENEMY
+    if (mario_XSpeed > 3)mario_XSpeed = 2; // makes it so mario cant accelerate for-
+    if (mario_XSpeed <-3)mario_XSpeed = -2; //-ever
     
-    //String str = String.valueOf(jumping);
-    //text(str, 100, 100);
-    //text(mario_XSpeed, 100, 100);
-    //fill(0);
-    
-    if (mario_XSpeed > 4)mario_XSpeed = 4;
-    if (mario_XSpeed <-4)mario_XSpeed = -4;
-    if (!jumping) {
-      
+    if (!jumping) { // if mario is on the ground, he shall not be in his jumping/falling animation any more
       if (marioFacing == "jumpingleft" || marioFacing == "jumpingright" || marioFacing == "fallingleft" || marioFacing == "fallingright") {
-        
-        if (marioFacing == "jumpingleft") {
-          marioFacing = "left";
-        } else if (marioFacing == "jumpingright") {
-          marioFacing = "right";
-        } else if (marioFacing == "fallingleft") {
-          marioFacing = "left";
-        } else if (marioFacing == "fallingright") {
-          marioFacing = "right";
-        }
-      }
-    }
-  }
-}
-void setBack(PImage back) {
+        if (marioFacing == "jumpingleft")marioFacing = "left";
+        else if (marioFacing == "jumpingright")marioFacing = "right";
+        else if (marioFacing == "fallingleft")marioFacing = "left";
+        else if (marioFacing == "fallingright") marioFacing = "right";
+} } } }
+
+void setBack(PImage back) {//Sets background
   background = back;
 }
 void checkWarp() {
   int X, Y, X2, Y2, index = 0;
-  
-  for (int i : warpListX) {
-    
-    
+  for (int i : warpListX) {//TESTS EVERY WARP-POS AND SEES IF MARIO IS IN IT
     X = warpListX[index];
     X2 = warpListX2[index];
     Y = warpListY[index];
     Y2 = warpListY2[index];
     i = i * 2; // blablablalblalb
-//      pipe < marioX  | marioX < pipeend
-    if (marioX >  X && X+blockSizeX*1 - 5> marioX&& isDown) { // marioX inside pipeX
-      //print("alaldS!");
-//       mario feet over warppoint// mariofeet under point+5    
-      if (marioY + blockSizeY <= Y +32&& marioY+blockSizeY>Y-1) {
-        print("sdjais");
-        //WARP
+     //pipe < marioX  | marioX < pipeend
+    if (marioX >  X && X+blockSizeX*1 - 5> marioX&& isDown) { // marioX inside pipe
+      //mario feet over warppoint// mariofeet under point+5    
+      if (marioY + blockSizeY <= Y +32&& marioY+blockSizeY>Y-1) {//WARP INIT
         pipesound.play(0.5);
         warp = true;
         warpX = X2 + 10;
         warpY = Y2 + -5 + 32;
         backindex = index;
         warpIndex2 = 1;
-       
-        
       }
     }
+    //IF MARIO IS AT THE SECOND WARP POS
     if (marioX >  X2 && X2+blockSizeX*1 - 5> marioX&& isDown) { // marioX inside pipeX
-      //print("alaldS!");
 //       mario feet over warppoint// mariofeet under point+5    
       if (marioY + blockSizeY <= Y2 +32&& marioY+blockSizeY>Y2-1) {
-        //print("sdjais");
         //WARP
         pipesound.play(0.5);
         warp = true;
@@ -497,14 +398,11 @@ void checkWarp() {
         warpY = Y + -5 +32;
         backindex = index;
         warpIndex2 = 2;
-
-      }
-    }
+    } }
     index+=1;
-  }
-  
-}
-void warphole(int X,int Y,int X2,int Y2, PImage back, PImage back2) {
+} }
+
+void warphole(int X,int Y,int X2,int Y2, PImage back, PImage back2) {//CREATES WARP
   Y = 1+Y;
   Y2 +=1;
   warpBack = (PImage[])expand(warpBack,warpBack.length + 1);
@@ -538,16 +436,14 @@ void pipe(int X,int Y,String Color, int len) {
     pipe1 = pipeY;
     pipe2 = pipeYtop;
   }
-  while (index <= len) {
+  while (index <= len) {//CREATES ALL THE COLLISION DETECTION FOR THE PIPES AND-
+  //-DRAWS THEM
     index+=1;
     XposList = append(XposList, X);
     YposList = append(YposList, Y - index * blockSizeY);
     XposList = append(XposList, X + 28);
     YposList = append(YposList, Y - index*blockSizeY);
     image(pipe1, X,Y + index * -1 * blockSizeY,30 * 2,16 * 2);
-
-      
-      
   }
   index+=1;
   XposList = append(XposList, X);
@@ -556,31 +452,28 @@ void pipe(int X,int Y,String Color, int len) {
   YposList = append(YposList, Y - index*blockSizeY);
   image(pipe2,X -2,Y + index * -1 * blockSizeY,32*2,16*2);
 }
-void drawGoal(int X,int Y) {
+void drawGoal(int X,int Y) {//CREATES GOAL AND CHECKS IF MARIOS THERE
   X = X * blockSizeX;
   Y = Y * blockSizeY;
   image(goal,X,Y - blockSizeY * 8);
-  if (!WIN) {
+  if (!WIN) {//makes sure you havnt won already
     if (lineTime > blockSizeY*8)image(line, X + 17,15+Y + ((blockSizeY*8)-lineTime));
     else image(line, X + 17,15+Y + lineTime - blockSizeY * 8);
     lineTime += 2;
   }
-  
   if (lineTime > blockSizeY * 16)lineTime = 0;
   if (marioX + blockSizeX > X && !WIN) { // YOU WIN!!
     winsound.play(0.5);
     WIN = true;
-  }
-}
-void scenery(PImage img, int X,int Y) {
+} }
 
+void scenery(PImage img, int X,int Y) {//DRAWS SCENERY, LIKE BUSHES AND MINIBUSHES
   X = X * blockSizeX;
   Y = Y * blockSizeY;
   if (img == bigbush)image(img, X,Y - blockSizeY * 4, 288,160);
-  if (img == bush)image(img,X,Y - blockSizeY * 2, 192, 112);
-  if (img == bushsmall)image(img,X,Y,64,32);
-  //image(img, X,Y, *2, *2);
-  
+  else if (img == bush)image(img,X,Y - blockSizeY * 2, 192, 112);
+  else if (img == bushsmall)image(img,X,Y,64,32);
+  else println("Error: no scenery image: " + img);
 }
 void drawCheckP(int X,int Y) {
   X = X * blockSizeX;
@@ -605,40 +498,32 @@ void drawCheckP(int X,int Y) {
       if (marioY + marioSizeY> Y && marioY < Y + 128) { // mario Y inside
         gatesound.play(0.5);
         gateopened = true;
-      }
-    }
-  }
-}
+} } } }
 void enemyDIE(int enemy) {
   marioGravitySpeed = -10; // JUMP ON ENEMY
   en_List[enemy] = "dead";
   kicksound.play(0.5);
-  
 }
 void DieOfYLimit() {
   if (marioY > marioDieY) {
     DIE();
-  }
-}
+} }
 void DIE() {
-  deathsound.play(0.5);
-  
-  marioDead = true;
-  marioDeadY = marioY;
-  marioDeadX = marioX;
-  marioDeadFail = 2;
-}
+  if(!cheats) {
+    deathsound.play(0.5);
+    marioDead = true;
+    marioDeadY = marioY;
+    marioDeadX = marioX;
+    marioDeadFail = 2;
+} }
   
 void touchEnemy() {
-  
   int index = 0;
   for (int i : en_XposList) {
     index +=1;
     if(en_List[index-1] == "dead") {
     } else {
       if(i == 3); // remove the "local variable i isnt used" thing
-      
-      
       if (marioX  + marioSizeX> en_XposList[index-1] && marioX < en_XposList[index-1] + marioSizeX) {
          //  marios feet   under koopa top  and   mario top over koopafeet
         if (marioY + marioSizeY > en_YposList[index-1] && marioY < en_YposList[index-1] + marioSizeY) {
@@ -646,78 +531,63 @@ void touchEnemy() {
             enemyDIE(index-1);
           } else {
             DIE();
-          }
-        }
-      }
-    }
-  }
-}
+} } } } } }
 void drawMario() {
-  if (marioFacing == "win") {
-    image(mariowin, marioX, marioY + -10, 32, 44);
-  } else if (marioFacing == "fallingright") {
-    image(mariofallright, marioX, marioY + -8, marioSizeX, marioSizeY);
-  } else if (marioFacing == "fallingleft") {
-    image(mariofallleft, marioX, marioY + -8, marioSizeX, marioSizeY);
-  } else if (marioFacing == "jumpingright") {
-    image(mariojumpright, marioX, marioY + -8, marioSizeX, marioSizeY);
-  } else if (marioFacing == "jumpingleft") {
-    image(mariojumpleft, marioX, marioY + -8, marioSizeX, marioSizeY);
-  } else if (marioFacing == "left") {
+  if (marioFacing == "win")image(mariowin, marioX, marioY + -10, 32, 44);
+  else if (marioFacing == "fallingright")image(mariofallright, marioX, marioY + -8, 32, 40);
+  else if (marioFacing == "fallingleft")image(mariofallleft, marioX, marioY + -8, 32, 40);
+  else if (marioFacing == "jumpingright")image(mariojumpright, marioX, marioY + -8, 32, 44);
+  else if (marioFacing == "jumpingleft")image(mariojumpleft, marioX, marioY + -8, 32, 44);
+  else if (marioFacing == "left") {
     if (walkedleft) {
       if (marioWalkSprite < 5) {
-        image(leftmario, marioX, marioY + -8, marioSizeX, marioSizeY);
+        image(leftmario, marioX, marioY + -8, 28, 40);
         marioWalkSprite += 1;
       } else {
-        image(marioleftwalk, marioX, marioY + -10, marioSizeX, marioSizeY);
+        image(marioleftwalk, marioX, marioY + -10, 30, 38);
         marioWalkSprite += 1;
       }
-    } else {
-      image(leftmario, marioX, marioY + -8, marioSizeX, marioSizeY);
-    }
+    } else image(leftmario, marioX, marioY + -8, 28, 40);
+    
   } else if (marioFacing == "right") {
     if (walkedright) {
       if (marioWalkSprite < 5) {
-        image(rightmario, marioX, marioY + -8, marioSizeX, marioSizeY);
+        image(rightmario, marioX, marioY + -8, 28, 40);
         marioWalkSprite += 1;
       } else {
-        image(mariorightwalk, marioX, marioY + -10, marioSizeX, marioSizeY);
+        image(mariorightwalk, marioX, marioY + -10, 30, 38);
         marioWalkSprite += 1;
       }
-    } else {
-      image(rightmario, marioX, marioY + -8, marioSizeX, marioSizeY);
-    }
+    } else image(rightmario, marioX, marioY + -8, 28, 40);
   }
-  if (marioFacing == "downright")image(downrightmario, marioX, marioY +10 -8, marioSizeX, marioSizeY -10);
-  if (marioFacing == "downleft")image(downleftmario, marioX, marioY +10 -8, marioSizeX, marioSizeY -10);
+  if (marioFacing == "downright")image(downrightmario, marioX, marioY +12 -8, 32, 28);
+  if (marioFacing == "downleft")image(downleftmario, marioX, marioY +12 -8, 32, 28);
   if (marioWalkSprite > 9)marioWalkSprite = 0;
 }
 void draw_background(PImage back) {
-  
-  if (!marioDead) {
-    imageMode(CENTER);
-    image(back, marioX * 0.8, (marioY + -150) * 0.8, width * 2, height * 2);
-    image(back, marioX * 0.8 + 1024, (marioY+-150) * 0.8, width * 2, height * 2);
-    image(back, marioX * 0.8 + 1024*2, (marioY+-150) * 0.8, width * 2, height * 2);
-    imageMode(CORNER);
+  pushMatrix();
+  if((marioY+-150)*0.8<600){
+    if (!marioDead)translate(marioX * 0.8,(marioY+-150) * 0.8);
+    if (marioDead)translate(marioDeadX*0.8,(marioDeadY+-150)*0.8);
   } else {
-    imageMode(CENTER);
-    image(back, marioDeadX * 0.8, (marioDeadY+-150) * 0.8, width * 2, height * 2);
-    image(back, marioDeadX * 0.8 + 1024, (marioDeadY+-150) * 0.8, width * 2, height * 2);
-    image(back, marioDeadX * 0.8 + 1024*2, (marioDeadY+-150) * 0.8, width * 2, height * 2);
-    imageMode(CORNER);
-  } 
+    if (!marioDead)translate(marioX * 0.8,-1*((marioY * -1 + height/2) + 50));
+    if (marioDead)translate(marioDeadX*0.8,(marioDeadY-150)*0.8);
+  }
+  imageMode(CENTER);
+  image(back, 0, 0, width * 2, height * 2);
+  image(back, 0 + 1024, 0, width * 2, height * 2);
+  image(back, 0 + 1024*2, 0, width * 2, height * 2);
+  imageMode(CORNER);
+  popMatrix();
 }
 void keyPressed() {
+  if (key == 'c')cheats = true;
   setMove(keyCode, true);
 }
 void keyReleased() {
-  if (keyCode == UP) {
-    jumped = false;
-  }
-  if (keyCode == UP) {
-    if (marioGravitySpeed < JumpSpeed/2)marioGravitySpeed=+JumpSpeed/2;
-  }
+  if (keyCode == UP)jumped = false;
+  if (keyCode == UP)if (marioGravitySpeed < JumpSpeed/2)marioGravitySpeed=+JumpSpeed/2;
+  
   if (marioFacing == "downright" || marioFacing == "downleft") {
     if (marioFacing == "downright")marioFacing = "right";
     else marioFacing = "left";
@@ -736,8 +606,7 @@ boolean setMove(int k, boolean b) {
     return isRight = b;
   default:
     return b;
-  }
-}
+} }
 void move_en() {
   int index = 0;
   for (String i : en_List) {
@@ -749,7 +618,6 @@ void move_en() {
     } else {
       en_spriteList[index-1] += 1;
       if (en_spriteList[index-1] > 24)en_spriteList[index-1] = 0;//switches sprite
-      
       if (en_startXposList[index-1] > en_endXposList[index-1]) { // makes it so the ones that start left dont crash
         if (en_startXposList[index-1] <= en_XposList[index-1] || en_endXposList[index-1] >= en_XposList[index-1]) {
           if (en_facingList[index-1] == "left")en_facingList[index-1] = "right";
@@ -761,18 +629,10 @@ void move_en() {
           if (en_facingList[index-1] == "left")en_facingList[index-1] = "right";
           else en_facingList[index-1] = "left";
           //move time
-        }
-      }
-      
-      
-      if (en_facingList[index-1] == "left") {
-        en_XposList[index-1] -= en_Ospeed[index-1];
-      } else {
-        en_XposList[index-1] += en_Ospeed[index-1];
-      }
-    }
-  }
-}
+      }  }
+      if (en_facingList[index-1] == "left")en_XposList[index-1] -= en_Ospeed[index-1];
+      else en_XposList[index-1] += en_Ospeed[index-1];
+} } }
 void draw_enemy() {
   imageMode(CORNER);
   int index = 0;
@@ -782,27 +642,15 @@ void draw_enemy() {
     if (en_List[index-1] == "deads") {
     } else {
       if(i == "hefaijd"); //removes error with i 
-      
       if (en_facingList[index-1] == "left") {
-        if (en_spriteList[index-1] > 12) {
-          image(koopaleft, en_XposList[index -1], en_YposList[index -1], marioSizeX, marioSizeY + 10);
-        } else {
-          image(koopaleftwalk, en_XposList[index -1], en_YposList[index -1], marioSizeX, marioSizeY + 10);
-        }
+        if (en_spriteList[index-1] > 12)image(koopaleft, en_XposList[index -1], en_YposList[index -1], marioSizeX, marioSizeY + 10);
+        else image(koopaleftwalk, en_XposList[index -1], en_YposList[index -1], marioSizeX, marioSizeY + 10);
       } else {
-        if (en_spriteList[index-1] > 12) {
-          image(kooparight, en_XposList[index -1], en_YposList[index -1], marioSizeX, marioSizeY + 10);
-        } else {
-          image(kooparightwalk, en_XposList[index -1], en_YposList[index -1], marioSizeX, marioSizeY + 10);
-        }
-      }
-    }
-  }
-}
+        if (en_spriteList[index-1] > 12)image(kooparight, en_XposList[index -1], en_YposList[index -1], marioSizeX, marioSizeY + 10);
+        else image(kooparightwalk, en_XposList[index -1], en_YposList[index -1], marioSizeX, marioSizeY + 10);
+} } } }
 void create_enemy(String enemy, int y, int x, int x2, int speed) {
   //goes from x to x2 and then to x again...
-
-
   en_Ospeed = append(en_Ospeed, speed);
   en_List = append(en_List, enemy);
   en_startXposList = append(en_startXposList, x * blockSizeX);
@@ -812,42 +660,28 @@ void create_enemy(String enemy, int y, int x, int x2, int speed) {
   en_XposList = append(en_XposList, x * blockSizeX);
   if (x2 > x)en_facingList = append(en_facingList, "left");
   else en_facingList = append(en_facingList, "right");
-
-  
 }
 void touchingRightBlocks() {
-
   int index = 0;
   for (int i : XposList) {
-
     index += 1;
     if (marioX + blockSizeX>= i && i + blockSizeX >= marioX + blockSizeX) { //
-
       if (YposList[index-1] <= marioY + blockSizeY - 1 && YposList[index-1] + blockSizeY >= marioY) {
         marioX += (mario_XSpeed * -1);
         mario_XSpeed = 0;
-        //println("los");
-      }
-    }
-  }
-}
+} } } }
 void touchingLeftBlocks() {
-
   int index = 0;
   for (int i : XposList) {
-
     index += 1;
     if (marioX >= i && i + blockSizeX >= marioX) { // works
        //( marios bottom is UNDER the blocks top)  (Marios top is ABOVE the blocks bottom)
       if (YposList[index-1] < marioY + blockSizeY && YposList[index-1] + blockSizeY > marioY) {
-        //if () {
+        
         marioX += mario_XSpeed * -1;
+        
         mario_XSpeed = 0;
-        //println("das");
-      }
-    }
-  }
-}
+} } } }
 void touchingDownBlocks() { //Detects gravity, if touch block, go up
   int index = 0;
   for (int i : XposList) {
@@ -863,53 +697,44 @@ void touchingDownBlocks() { //Detects gravity, if touch block, go up
         } else { // hit rock bottom(ground)
           marioY += marioGravitySpeed * -1;
           marioGravitySpeed = 0;
-        
           jumping = false;
           //println("jum");
           break;
         }
       } else jumping = true;
     } else jumping = true;
-  }
-}
+} }
 void blocklineX(PImage block, int y, int x, int x2) {
   int time = 0;
   while (x2 - x != time) {
-
     XposList = append(XposList, (x + time) * blockSizeX);
     YposList = append(YposList, (y * blockSizeY));
     image(block, (x + time) * blockSizeX, y * blockSizeY, blockSizeX, blockSizeY);
     time += 1;
-  }
-}
+} }
 void blocklineY(PImage block, int x, int y, int y2) {
   int time = 0;
   while (y2 - y != time) {
-
     YposList = append(YposList, (y + time) * blockSizeY);
     XposList = append(XposList, (x * blockSizeX));
     image(block, x * blockSizeX, (y + time) * blockSizeY, blockSizeX, blockSizeY);
     time += 1;
-  }
-}
+} }
 void checktheway() {
   if (isLeft) {
     walkedleft = true;
     if (marioFacing == "fallingleft" || marioFacing == "fallingright") {
       marioFacing = "fallingleft";
-      mario_XSpeed+=-1;
-    
+      mario_XSpeed+=-1; 
     } else if (marioFacing == "jumpingleft" || marioFacing == "jumpingright") {
       marioFacing = "jumpingleft";
       mario_XSpeed+=-1;
-    
     } else if (marioFacing != "downleft" && marioFacing != "downright") {
       mario_XSpeed+=-1; 
       marioFacing = "left";
     } else {
-      if (marioFacing == "downleft") {
-        marioFacing = "downleft";
-      } else marioFacing = "downright";
+      if (marioFacing == "downleft")marioFacing = "downleft";
+      else marioFacing = "downright";
     }
   } else walkedleft = false;
   if (isRight) {
@@ -919,37 +744,26 @@ void checktheway() {
       mario_XSpeed+=1;
     } else if (marioFacing == "jumpingleft" || marioFacing == "jumpingright") {
       marioFacing = "jumpingright";
-      mario_XSpeed+=1;
-      
+      mario_XSpeed+=1; 
     } else if (marioFacing != "downleft" && marioFacing != "downright") {
       mario_XSpeed+=1;
       marioFacing = "right";
     } else { 
-      if (marioFacing == "downleft") {
-        marioFacing = "downleft";
-      } else marioFacing = "downright";
-      
+      if (marioFacing == "downleft")marioFacing = "downleft";
+      else marioFacing = "downright";
     }
   } else walkedright = false;
   if (isDown) { 
-    if (marioFacing == "right" || marioFacing == "downright") {
-      marioFacing = "downright";
-    } else if (marioFacing == "left" || marioFacing == "downleft") {
-      marioFacing = "downleft";
-    } else if (marioFacing == "jumpingright") {
-      marioFacing = "downright";
-    } else if (marioFacing == "jumpingleft") {
-      marioFacing = "downleft";
-    } else if (marioFacing == "fallingright") {
-      marioFacing = "downright";
-    } else if (marioFacing == "fallingleft") {
-      marioFacing = "downleft";
-    }
-    
-    
+    if (marioFacing == "right" || marioFacing == "downright")marioFacing = "downright";
+    else if (marioFacing == "left" || marioFacing == "downleft")marioFacing = "downleft";
+    else if (marioFacing == "jumpingright")marioFacing = "downright";
+    else if (marioFacing == "jumpingleft")marioFacing = "downleft";
+    else if (marioFacing == "fallingright")marioFacing = "downright";
+    else if (marioFacing == "fallingleft")marioFacing = "downleft";
   }
   if (isUp)if (marioFacing != "downleft" && marioFacing != "downright")if (!jumping)if (marioGravitySpeed > -10)if (!jumped) {
-    marioGravitySpeed = JumpSpeed;
+    marioGravitySpeed = JumpSpeed; //JUMP
+    if(cheats)marioGravitySpeed=JumpSpeed*2;
     jumped = true;
     if(marioFacing == "left")marioFacing = "jumpingleft";
     if(marioFacing == "right")marioFacing = "jumpingright";
@@ -957,22 +771,33 @@ void checktheway() {
   }
   if (marioFacing == "jumpingleft" || marioFacing == "jumpingright") {
     if (marioGravitySpeed > 0) {
-      if (marioFacing == "jumpingleft") {
-        marioFacing = "fallingleft";
-      } else marioFacing = "fallingright";
+      if (marioFacing == "jumpingleft")marioFacing = "fallingleft";
+      else marioFacing = "fallingright";
+  } }
+  if (mario_XSpeed!=0) {
+    if (!walkedleft || !walkedright)if(!jumping) {//IF NOT WALKING, SLOW DOWN
+      if (runBack >= 4){
+        if (!walkedleft &&mario_XSpeed < 0)mario_XSpeed += 1;
+        if (!walkedright && mario_XSpeed > 0)mario_XSpeed += -1;
+        runBack=0;
+      } else runBack+=1;
+    } else if(!walkedleft||!walkedright)if(jumping) {//IFJUMPING AND NOTWALKEDLEFT/RIGHT
+      if (runBack >= 20){
+        if(!walkedleft&&mario_XSpeed<0)mario_XSpeed+=1;
+        if(!walkedright&&mario_XSpeed>0)mario_XSpeed+=-1;
+        runBack=0;
+      } else runBack+=1;
     }
-  }
-  if (!walkedleft)if(mario_XSpeed < 0)mario_XSpeed += 1;
-  if (!walkedright)if(mario_XSpeed > 0)mario_XSpeed += -1;
+  } else runBack=0;
 
   if (marioFacing == "downleft" || marioFacing == "downright") {
     if(jumping)marioX += mario_XSpeed; // MOVES MARIO IF FLYING AND DOWN
   
-  } else if (marioFacing != "downleft" && marioFacing != "downright")marioX += mario_XSpeed; // MOVES MARIO
-  
+  } else if (marioFacing != "downleft" && marioFacing != "downright")if(cheats)marioX += mario_XSpeed+10; // MOVES MARIO WITH CHEATS
+  else marioX += mario_XSpeed; // MOVES MARIO IF NOT CHEATS
 
 }
-void blackScreen() {
+void blackScreen() {//RUN EVERY FRAME TO FADE IN WITH A BLACKSCREEN
   if (blackoutAlpha > 255)noLoop();
   imageMode(CORNER);
 
@@ -984,7 +809,7 @@ void blackScreen() {
   //println(blackoutAlpha);
   
 }
-void createLucky(int X,int Y) {
+void createLucky(int X,int Y) {//CREATES A LUCKYBLOCK
   luckyX = append(luckyX, X * blockSizeX);
   luckyY = append(luckyY, Y * blockSizeY);
   luckGotItem = append(luckGotItem, 1);
@@ -992,32 +817,29 @@ void createLucky(int X,int Y) {
   DcoinY = append(DcoinY, Y * blockSizeY);
   DcoinTime = append(DcoinTime, 0);
 }
-void drawLucky() {
+void drawLucky() {//DRAWS EVERY LUCKYBLOCK/NONEBLOCK AND CHECKS IF IT SHAKES
   int index = 0;
   for (int i : luckyX) {
     XposList = append(XposList, i);
     YposList = append(YposList, luckyY[index]);
     if (i == shakeBlockX && luckyY[index] == shakeBlockY) { //shakes the block when hit
-      //print("lora!");
       if (luckGotItem[index] == 1) { // block has items
           image(luckyblock, i, luckyY[index] + -10, blockSizeX, blockSizeY);
       } else { // block does not have items
           image(noneblock, i, luckyY[index] + -10, blockSizeX, blockSizeY);
       }
       shakeBlockY = 2374293;
-      shakeBlockX = 2425882;
+      shakeBlockX = 2425882;//RANDOM NUMBERS THAT MARIO WILL NEVER BE IN
       
     } else {
       if (luckGotItem[index] == 1) { // block has items
         image(luckyblock, i, luckyY[index], blockSizeX, blockSizeY);
       } else { // block does not have items
         image(noneblock, i, luckyY[index], blockSizeX, blockSizeY);
-      }
-    }
+    } }
     index+=1;
-  }
-}
-void checkiflucky(int X, int Y) {
+} }
+void checkiflucky(int X, int Y) {//CHECKS IF THE BLOCK MARIOS HEAD HIT IS LUCKYBLOCK
   int index = 0;
   for (int i : luckyX) {
     if (i == X && luckyY[index] == Y) { // the roof Mo hit is a actually lucky block!!
@@ -1028,26 +850,82 @@ void checkiflucky(int X, int Y) {
         luckGotItem[index] = 0;
         coinCounter +=1;
         coinsound.play(0.5);
-      }
-      
-    }
+    } }
     index += 1;
-  }
-}
-void drawDCoins() {
+} }
+void drawDCoins() {//DRAWS ALL THE DISAPPEARING COINS FROM LUCKYBLOCKS
   int index = 0;
-  //print("pala");
   for (int i : DcoinX) {
-    //print("sala");
     if (DcoinTime[index] > 0) { // a coin!
-      //print("hejsan!");
       image(coin, i + 4, DcoinY[index] - blockSizeY, coinSizeX, coinSizeY);
       DcoinY[index] += -2;
       DcoinTime[index] += 1;
     }
-    if (DcoinTime[index] > 20) {
-      DcoinTime[index] = 0;
-    }
+    if (DcoinTime[index] > 20)DcoinTime[index] = 0;
     index +=1;
-  }
+} }
+void WARP() {
+    if (warpTime == 90) {
+      warp = false;
+      warpTime = 0;
+    } else if (warpTime > 60) {
+      marioY+=-1;
+      warpTime+=1;
+    }
+    else if (warpTime == 60) {
+      marioX = warpX;
+      marioY = warpY-30;
+      warpTime += 1;
+      if(warpIndex2 == 2)setBack(warpBack2[backindex]);
+      else setBack(warpBack[backindex]);
+      pipesound.play(0.5);
+    } else {
+      marioY += 1;
+      warpTime+=1;
+    }
+    popMatrix();
+}
+void WIN() {
+  if (musicTime == 0) {
+      backgroundsong.stop();
+      musicTime = 1; 
+   }
+   if(marioFacing != "right"||marioFacing != "win")marioFacing = "right";
+   if (winTime < 200)marioX +=1;
+   if (marioY < GoalY * 32)marioY += 4;
+   if (marioY > GoalY * 32)marioY += -4;
+   if (winTime > 200)marioFacing = "win";
+   drawMario();
+   popMatrix();
+   if(winTime > 250)blackScreen();
+   winTime+=1;
+}
+void marioDIE() {
+    if (musicTime == 0) {
+      backgroundsong.stop();
+      musicTime = 1;
+    }
+    if (marioDeadFail == 1333777777) {
+      popMatrix();
+      blackScreen();
+    } else {
+      image(mariodead, marioX, marioY + -8, marioSizeX, marioSizeY);
+      if (marioDeadFail > 10)marioDeadFail = 0;
+      if (marioDeadFail > 1)marioDeadFail += 1;
+      else {
+        if (marioY < marioDeadY + -100)marioDeadFail = 1;
+        if (marioDeadFail == 1) {
+          marioY += 9;
+          if (marioY > marioDeadY + height/3 * 2)marioDeadFail = 1333777777;
+        } else {
+          marioY += -8;
+      } }
+      popMatrix();
+} }
+
+void gravityStuffs() {
+    marioGravitySpeed += GravityAcceleration;
+    if (marioGravitySpeed > GravityAcceleration*16)marioGravitySpeed = GravityAcceleration*16;
+    marioY += marioGravitySpeed; // moves mario up or down
+    DieOfYLimit(); // checks if under limit
 }
